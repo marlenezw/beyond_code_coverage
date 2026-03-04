@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Practical Guide to Agentic Coding — Marlene Mhangami</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: oklch(0.98 0.006 280);
+      --fg: oklch(0.22 0.02 280);
+      --primary: oklch(0.52 0.24 290);
+      --secondary: oklch(0.68 0.16 340);
+      --accent: oklch(0.78 0.14 70);
+      --muted: oklch(0.50 0.02 280);
+      --border: oklch(0.91 0.015 280);
+      --card: oklch(1.00 0 0);
+      --font-display: 'Playfair Display', serif;
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--fg);
+      font-family: var(--font-sans);
+      color: var(--fg);
+      overflow: hidden;
+    }
+
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem 6rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .slide::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 30%, oklch(0.92 0.06 290 / 0.4), transparent),
+        radial-gradient(ellipse 60% 50% at 80% 70%, oklch(0.90 0.08 340 / 0.3), transparent),
+        radial-gradient(ellipse 70% 40% at 50% 90%, oklch(0.88 0.06 240 / 0.2), transparent),
+        radial-gradient(ellipse 50% 30% at 70% 20%, oklch(0.92 0.06 70 / 0.15), transparent),
+        linear-gradient(180deg, var(--bg) 0%, oklch(0.96 0.01 280) 100%);
+      z-index: 0;
+    }
+
+    .slide > * { position: relative; z-index: 1; }
+
+    .slide::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg,
+        oklch(0.52 0.24 290) 0%,
+        oklch(0.68 0.16 340) 30%,
+        oklch(0.60 0.14 240) 60%,
+        oklch(0.78 0.14 70) 100%
+      );
+      z-index: 2;
+    }
+
+    .slide-fullscreen {
+      padding: 0;
+    }
+    .slide-fullscreen::before { display: none; }
+    .slide-fullscreen::after { display: none; }
+    .slide-fullscreen img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #1e1e2e;
+    }
+
+    h1 {
+      font-family: var(--font-display);
+      font-weight: 900;
+      font-size: 3.5rem;
+      line-height: 1.15;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1.5rem;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 2.8rem;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+    }
+
+    h3 {
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 1.5rem;
+      color: var(--fg);
+      margin-bottom: 1rem;
+    }
+
+    p, li {
+      font-size: 1.35rem;
+      line-height: 1.7;
+      color: var(--fg);
+    }
+
+    .subtitle {
+      font-size: 1.5rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    .small-text {
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      background: oklch(0.95 0.012 280);
+      padding: 0.15em 0.4em;
+      border-radius: 0.375rem;
+      font-size: 0.9em;
+      color: var(--primary);
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      box-shadow:
+        0 1px 3px oklch(0.52 0.24 290 / 0.06),
+        0 8px 24px oklch(0.52 0.24 290 / 0.08);
+    }
+
+    .glass {
+      background: oklch(1.00 0 0 / 0.6);
+      backdrop-filter: blur(16px);
+      border: 1px solid oklch(1.00 0 0 / 0.5);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      box-shadow:
+        0 2px 8px oklch(0.52 0.24 290 / 0.06),
+        0 16px 48px oklch(0.52 0.24 290 / 0.10);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 1rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      background: linear-gradient(135deg, oklch(0.52 0.24 290 / 0.12), oklch(0.68 0.16 340 / 0.12));
+      color: var(--primary);
+      border: 1px solid oklch(0.52 0.24 290 / 0.2);
+    }
+
+    .sparkle {
+      text-align: center;
+      letter-spacing: 0.5em;
+      color: var(--secondary);
+      font-size: 0.85rem;
+      margin: 1.5rem 0;
+    }
+
+    ul { list-style: none; padding-left: 0; }
+    ul li {
+      padding-left: 1.5rem;
+      position: relative;
+      margin-bottom: 0.75rem;
+    }
+    ul li::before {
+      content: '\2726';
+      position: absolute;
+      left: 0;
+      color: var(--secondary);
+    }
+
+    .slide-img {
+      max-width: 60%;
+      max-height: 55vh;
+      border-radius: 1rem;
+      box-shadow:
+        0 2px 8px oklch(0.52 0.24 290 / 0.06),
+        0 16px 48px oklch(0.52 0.24 290 / 0.10);
+    }
+
+    .slide-img-sm {
+      max-width: 40%;
+      max-height: 40vh;
+      border-radius: 0.75rem;
+      box-shadow:
+        0 1px 3px oklch(0.52 0.24 290 / 0.06),
+        0 8px 24px oklch(0.52 0.24 290 / 0.08);
+    }
+
+    .center { text-align: center; }
+    .left { text-align: left; align-self: flex-start; }
+    .row { display: flex; gap: 2rem; align-items: center; width: 100%; }
+    .col { flex: 1; }
+    .gap-1 { gap: 1rem; }
+    .gap-2 { gap: 2rem; }
+    .mt-1 { margin-top: 1rem; }
+    .mt-2 { margin-top: 2rem; }
+    .mb-1 { margin-bottom: 1rem; }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      width: 100%;
+    }
+
+    .three-col .card {
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+
+    .progress {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transition: width 0.4s ease;
+      z-index: 100;
+    }
+
+    .slide-num {
+      position: fixed;
+      bottom: 1.2rem;
+      right: 2rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--muted);
+      z-index: 100;
+    }
+
+    .speaker-badge {
+      position: fixed;
+      bottom: 1rem;
+      left: 2rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      z-index: 100;
+      letter-spacing: 0.04em;
+    }
+    .speaker-badge a {
+      color: var(--muted);
+      text-decoration: none;
+      font-family: var(--font-mono);
+    }
+    .speaker-badge a:hover {
+      color: var(--primary);
+    }
+
+    blockquote {
+      border-left: 4px solid var(--secondary);
+      padding: 1.5rem 2rem;
+      font-style: italic;
+      font-size: 1.4rem;
+      color: var(--fg);
+      background: oklch(0.68 0.16 340 / 0.05);
+      border-radius: 0 1rem 1rem 0;
+    }
+
+    .slide-title h1 {
+      font-size: 4.2rem;
+    }
+
+    .slide-section {
+      justify-content: center;
+      align-items: center;
+    }
+    .slide-section h2 {
+      font-size: 3.5rem;
+      text-align: center;
+    }
+
+    .keys-hint {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: oklch(0.70 0.02 280);
+      z-index: 100;
+      opacity: 0.5;
+    }
+
+    /* Progressive reveal */
+    .prog-layer {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      pointer-events: none;
+    }
+    .prog-layer.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Coding agent architecture */
+    .agent-arch {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      width: 100%;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .agent-layer {
+      border: 2px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.6rem 2rem;
+      background: var(--card);
+      position: relative;
+      transition: all 0.4s ease;
+    }
+
+    .agent-layer.layer-model {
+      border-color: oklch(0.52 0.24 290 / 0.4);
+      z-index: 3;
+    }
+    .agent-layer.layer-harness {
+      border-color: oklch(0.68 0.16 340 / 0.4);
+      margin-top: -0.5rem;
+      z-index: 2;
+    }
+    .agent-layer.layer-interface {
+      border-color: oklch(0.78 0.14 70 / 0.5);
+      margin-top: -0.5rem;
+      z-index: 1;
+    }
+
+    .layer-label {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .layer-model .layer-label { color: var(--primary); }
+    .layer-harness .layer-label { color: var(--secondary); }
+    .layer-interface .layer-label { color: oklch(0.65 0.14 70); }
+
+    .layer-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .layer-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: oklch(0.96 0.012 280);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .layer-model .layer-chip {
+      background: oklch(0.52 0.24 290 / 0.08);
+      border-color: oklch(0.52 0.24 290 / 0.2);
+    }
+    .layer-harness .layer-chip {
+      background: oklch(0.68 0.16 340 / 0.08);
+      border-color: oklch(0.68 0.16 340 / 0.2);
+    }
+    .layer-interface .layer-chip {
+      background: oklch(0.78 0.14 70 / 0.10);
+      border-color: oklch(0.78 0.14 70 / 0.25);
+    }
+
+    /* ═══ Agentic Loop Flow Diagram ═══ */
+    .flow-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .flow-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      background: var(--card);
+      border: 2px solid var(--border);
+      box-shadow: 0 4px 16px oklch(0.52 0.24 290 / 0.08);
+      font-weight: 600;
+      font-size: 0.95rem;
+      min-width: 130px;
+      position: relative;
+    }
+
+    .flow-node-prompt {
+      border-color: oklch(0.52 0.24 290 / 0.5);
+      background: oklch(0.52 0.24 290 / 0.06);
+    }
+    .flow-node-context {
+      border-color: oklch(0.60 0.20 240 / 0.5);
+      background: oklch(0.60 0.20 240 / 0.06);
+    }
+    .flow-node-action {
+      border-color: oklch(0.68 0.16 340 / 0.5);
+      background: oklch(0.68 0.16 340 / 0.06);
+    }
+    .flow-node-verify {
+      border-color: oklch(0.78 0.14 70 / 0.6);
+      background: oklch(0.78 0.14 70 / 0.06);
+    }
+    .flow-node-done {
+      border-color: oklch(0.55 0.18 150 / 0.5);
+      background: oklch(0.55 0.18 150 / 0.08);
+    }
+
+    .flow-node .flow-sub {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    .flow-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      padding: 0.3rem 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .flow-arrow-down {
+      padding: 0.4rem 0;
+    }
+
+    .flow-loop-wrapper {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Context journey */
+    .context-journey {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .context-progress-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 2.5rem;
+      width: 100%;
+    }
+
+    .context-step {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex: 1;
+    }
+
+    .context-dot {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      transition: all 0.3s ease;
+    }
+
+    .context-dot.active {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 2px 12px oklch(0.52 0.24 290 / 0.3);
+    }
+
+    .context-dot.done {
+      background: oklch(0.52 0.24 290 / 0.12);
+      color: var(--primary);
+      border-color: oklch(0.52 0.24 290 / 0.3);
+    }
+
+    .context-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      transition: background 0.3s ease;
+    }
+
+    .context-line.done {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    .context-step-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .context-step-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .context-card-main {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      box-shadow:
+        0 1px 3px oklch(0.52 0.24 290 / 0.06),
+        0 8px 24px oklch(0.52 0.24 290 / 0.08);
+      width: 100%;
+    }
+
+    .context-card-main .row {
+      align-items: flex-start;
+    }
+
+    .context-card-main img {
+      max-width: 100%;
+      max-height: 40vh;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 16px oklch(0 0 0 / 0.1);
+    }
+
+    /* Verification icon containers */
+    .verif-icon {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.75rem;
+    }
+    .verif-icon svg {
+      width: 36px;
+      height: 36px;
+    }
+    .verif-icon-test {
+      background: oklch(0.52 0.24 290 / 0.1);
+    }
+    .verif-icon-trace {
+      background: oklch(0.78 0.14 70 / 0.15);
+    }
+    .verif-icon-func {
+      background: oklch(0.68 0.16 340 / 0.1);
+    }
+
+    /* Social links */
+    .social-links {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      margin-top: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .social-links a {
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: color 0.2s;
+    }
+    .social-links a:hover {
+      color: var(--primary);
+    }
+    .social-links svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 900px) {
+      .slide { padding: 2rem 2.5rem; }
+      h1 { font-size: 2.4rem; }
+      h2 { font-size: 2rem; }
+      p, li { font-size: 1.1rem; }
+      .row { flex-direction: column; }
+      .three-col { grid-template-columns: 1fr; }
+      .slide-img { max-width: 90%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck">
+
+    <!-- SLIDE 1: Title -->
+    <div class="slide slide-title active" data-slide="1">
+      <div class="center">
+        <h1>A Practical Guide to<br/>Agentic Coding</h1>
+        <p class="subtitle">Marlene Mhangami</p>
+        <p class="small-text mt-1">Senior Developer Advocate &middot; Python &amp; AI &middot; Microsoft</p>
+        <div class="social-links mt-1">
+          <a href="https://twitter.com/marlene_zw" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            marlene_zw
+          </a>
+          <a href="https://bsky.app/profile/marlene.bsky.social" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+            marlene.bsky.social
+          </a>
+          <a href="https://www.linkedin.com/in/marlenemhangami/" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </a>
+        </div>
+        <p class="small-text mt-2"><a href="https://aka.ms/pytv26" style="font-size: 1.1rem;">aka.ms/pytv26</a></p>
+        <div class="sparkle mt-1">&#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022;</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: Agenda -->
+    <div class="slide" data-slide="2">
+      <h2>Agenda</h2>
+      <div class="card" style="width: 100%; max-width: 700px;">
+        <ul>
+          <li>What is Agentic Coding?</li>
+          <li>Best Practices for Agentic Coding
+            <ul style="margin-top: 0.5rem; margin-left: 0.5rem;">
+              <li style="font-size: 1.15rem; color: var(--muted);">Context &mdash; skill.md, agents.md, prompting</li>
+              <li style="font-size: 1.15rem; color: var(--muted);">Verification &mdash; unit tests, traces, functionality tests</li>
+              <li style="font-size: 1.15rem; color: var(--muted);">Version Control &mdash; commits, docs, PR reviews</li>
+            </ul>
+          </li>
+          <li>Demo: Using GitHub Copilot in PyCharm and the Terminal</li>
+        </ul>
+        <div class="sparkle">&#10022; &middot; &#10022; &middot; &#10022;</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Section — What is Agentic Coding? -->
+    <div class="slide slide-section" data-slide="3">
+      <h2>What is Agentic Coding?</h2>
+      <div class="sparkle">&#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022;</div>
+    </div>
+
+    <!-- SLIDE 4: Full-screen code editor image -->
+    <div class="slide slide-fullscreen" data-slide="4">
+      <img src="images/pdf_fullpage4.png" alt="Code editor showing agentic coding in action" />
+    </div>
+
+    <!-- SLIDE 5: AI Agent definition -->
+    <div class="slide" data-slide="5">
+      <div class="center" style="max-width: 800px;">
+        <div class="badge mb-1">Core Concept</div>
+        <h2>AI Agent</h2>
+        <div class="card" style="padding: 2.5rem 3rem; text-align: center;">
+          <p style="font-size: 1.6rem; line-height: 1.6; font-weight: 500; color: var(--fg);">
+            An AI Agent is an <strong style="color: var(--primary);">LLM</strong> that runs
+            <strong style="color: var(--secondary);">tools</strong> in a
+            <strong style="color: var(--primary);">loop</strong> to achieve a goal.
+          </p>
+        </div>
+        <div class="sparkle mt-2">&#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022;</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Agentic Loop — inline SVG diagram matching agent-loop-picture.svg -->
+    <div class="slide" data-slide="6">
+      <h2 class="center" style="margin-bottom: 0.5rem;">The Agentic Loop</h2>
+      <p class="small-text center" style="margin-bottom: 1.5rem;">How coding agents think, act, and iterate</p>
+
+      <svg xmlns="http://www.w3.org/2000/svg" width="820" height="310" viewBox="0 0 820 310" fill="none" style="max-width: 90%; height: auto;">
+        <!-- Background -->
+        <rect width="820" height="310" rx="12" fill="oklch(0.98 0.006 280)"/>
+
+        <!-- "Your prompt" box -->
+        <rect x="20" y="105" width="120" height="55" rx="8" fill="oklch(0.91 0.015 280)"/>
+        <text x="80" y="137" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="14" font-weight="600" fill="oklch(0.22 0.02 280)">Your prompt</text>
+
+        <!-- Agentic loop dashed border -->
+        <rect x="195" y="55" width="510" height="160" rx="12" fill="none" stroke="oklch(0.82 0.02 280)" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <text x="450" y="78" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" fill="oklch(0.60 0.02 280)">agentic loop</text>
+
+        <!-- Arrow: Your prompt -> Gather context -->
+        <rect x="140" y="127" width="55" height="10" fill="oklch(0.98 0.006 280)"/>
+        <path d="M140 132 L195 132" stroke="oklch(0.50 0.02 280)" stroke-width="2"/>
+        <polygon points="193,127 205,132 193,137" fill="oklch(0.50 0.02 280)"/>
+
+        <!-- Gather context box -->
+        <rect x="215" y="105" width="130" height="55" rx="8" fill="oklch(0.88 0.08 290 / 0.3)"/>
+        <text x="280" y="137" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600" fill="oklch(0.22 0.02 280)">Gather context</text>
+
+        <!-- Arrow: Gather context -> Take action -->
+        <path d="M345 132 L385 132" stroke="oklch(0.50 0.02 280)" stroke-width="2"/>
+        <polygon points="383,127 395,132 383,137" fill="oklch(0.50 0.02 280)"/>
+
+        <!-- Take action box -->
+        <rect x="395" y="105" width="130" height="55" rx="8" fill="oklch(0.88 0.08 290 / 0.3)"/>
+        <text x="460" y="131" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600" fill="oklch(0.22 0.02 280)">Take action</text>
+        <text x="460" y="148" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="10" fill="oklch(0.50 0.02 280)">(tools)</text>
+
+        <!-- Arrow: Take action -> Verify results -->
+        <path d="M525 132 L565 132" stroke="oklch(0.50 0.02 280)" stroke-width="2"/>
+        <polygon points="563,127 575,132 563,137" fill="oklch(0.50 0.02 280)"/>
+
+        <!-- Verify results box -->
+        <rect x="575" y="105" width="130" height="55" rx="8" fill="oklch(0.88 0.08 290 / 0.3)"/>
+        <text x="640" y="137" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="600" fill="oklch(0.22 0.02 280)">Verify results</text>
+
+        <!-- Loop-back arrow: Verify results -> Gather context -->
+        <path d="M640 160 L640 185 Q640 195 630 195 L290 195 Q280 195 280 185 L280 165" fill="none" stroke="oklch(0.68 0.16 340 / 0.5)" stroke-width="2.5"/>
+        <polygon points="275,168 280,155 285,168" fill="oklch(0.68 0.16 340 / 0.5)"/>
+
+        <!-- Arrow: Verify results -> Done -->
+        <rect x="705" y="127" width="20" height="10" fill="oklch(0.98 0.006 280)"/>
+        <path d="M705 132 L755 132" stroke="oklch(0.50 0.02 280)" stroke-width="2"/>
+        <polygon points="753,127 765,132 753,137" fill="oklch(0.50 0.02 280)"/>
+
+        <!-- Done box -->
+        <rect x="765" y="105" width="45" height="55" rx="8" fill="oklch(0.91 0.015 280)"/>
+        <text x="787" y="137" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" fill="oklch(0.22 0.02 280)">Done</text>
+
+        <!-- "You: interrupt, steer, or add context" box -->
+        <rect x="20" y="240" width="220" height="50" rx="8" fill="oklch(0.68 0.16 340 / 0.08)" stroke="oklch(0.68 0.16 340 / 0.4)" stroke-width="1.5"/>
+        <text x="130" y="260" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" fill="oklch(0.22 0.02 280)">You: interrupt, steer,</text>
+        <text x="130" y="276" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="12" fill="oklch(0.22 0.02 280)">or add context</text>
+
+        <!-- Dashed arrow from "You" up to the loop -->
+        <path d="M240 265 L460 265 L460 220" stroke="oklch(0.68 0.16 340 / 0.4)" stroke-width="1.5" stroke-dasharray="5 3" fill="none"/>
+        <polygon points="455,222 460,210 465,222" fill="oklch(0.68 0.16 340 / 0.4)"/>
+      </svg>
+
+      <p class="small-text center mt-1" style="font-style: italic;">Source: <a href="https://code.claude.com/docs/en/how-claude-code-works" target="_blank">code.claude.com/docs/en/how-claude-code-works</a></p>
+    </div>
+
+    <!-- SLIDE 7: Parts of a Coding Agent — progressive reveal -->
+    <div class="slide" data-slide="7" data-progressive="true">
+      <h2 class="center" style="margin-bottom: 1.5rem;">Parts of a Coding Agent</h2>
+      <div class="agent-arch">
+        <!-- Layer 1: Model -->
+        <div class="agent-layer layer-model prog-layer" data-prog="0">
+          <div class="layer-label">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-7.07-15.07 2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/></svg>
+            Model
+          </div>
+          <div class="layer-items">
+            <span class="layer-chip">OpenAI</span>
+            <span class="layer-chip">Anthropic</span>
+            <span class="layer-chip">Google</span>
+            <span class="layer-chip">Qwen</span>
+            <span class="layer-chip">DeepSeek</span>
+          </div>
+        </div>
+
+        <!-- Layer 2: Harness / Runtime -->
+        <div class="agent-layer layer-harness prog-layer" data-prog="1">
+          <div class="layer-label">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Harness / Runtime
+          </div>
+          <div class="layer-items">
+            <span class="layer-chip">Agentic Loop</span>
+            <span class="layer-chip">Tools</span>
+            <span class="layer-chip">Context</span>
+            <span class="layer-chip">Execution Policy</span>
+            <span class="layer-chip">Verification</span>
+          </div>
+        </div>
+
+        <!-- Layer 3: Interface -->
+        <div class="agent-layer layer-interface prog-layer" data-prog="2">
+          <div class="layer-label">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="oklch(0.65 0.14 70)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Interface
+          </div>
+          <div class="layer-items">
+            <span class="layer-chip">IDE</span>
+            <span class="layer-chip">CLI</span>
+            <span class="layer-chip">Web App</span>
+          </div>
+        </div>
+      </div>
+      <p class="small-text center mt-2" id="progHint" style="opacity: 0.5;">Press &rarr; to reveal layers</p>
+    </div>
+
+    <!-- SLIDE 8: Full-screen code editor image -->
+    <div class="slide slide-fullscreen" data-slide="8">
+      <img src="images/pdf_fullpage8.png" alt="Code editor showing coding agent at work" />
+    </div>
+
+    <!-- SLIDE 9: Section — Best Practices -->
+    <div class="slide slide-section" data-slide="9">
+      <h2>Best Practices</h2>
+      <div class="sparkle">&#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022;</div>
+    </div>
+
+    <!-- SLIDE 10: Context 1/3 — skill.md -->
+    <div class="slide" data-slide="10">
+      <div class="context-journey">
+        <div class="badge mb-1">Best Practice #1</div>
+        <h2 style="margin-bottom: 0.5rem;">Context</h2>
+
+        <div class="context-progress-bar">
+          <div class="context-step-wrapper">
+            <div class="context-dot active">1</div>
+            <div class="context-step-label">skill.md</div>
+          </div>
+          <div class="context-line"></div>
+          <div class="context-step-wrapper">
+            <div class="context-dot">2</div>
+            <div class="context-step-label">agents.md</div>
+          </div>
+          <div class="context-line"></div>
+          <div class="context-step-wrapper">
+            <div class="context-dot">3</div>
+            <div class="context-step-label">Prompting</div>
+          </div>
+        </div>
+
+        <div class="context-card-main">
+          <h3>Curated Skills</h3>
+          <p style="font-size: 1.05rem; line-height: 1.6; margin-bottom: 1rem;">Curated Skills (beige) improve performance by <strong>+16.2pp on average</strong>; self-generated Skills (amber) provide negligible or negative benefit.</p>
+          <div class="center">
+            <img src="images/pdf_page10_img0.png" alt="Figure 1. Agent architecture stack and resolution rates across 7 agent-model configurations on 84 tasks" style="max-height: 50vh; max-width: 95%; border-radius: 0.75rem; box-shadow: 0 4px 16px oklch(0 0 0 / 0.1);" />
+          </div>
+          <p class="small-text mt-1 center" style="font-style: italic; color: oklch(0.45 0.02 280);">Figure 1. Agent architecture stack and resolution rates across 7 agent-model configurations on 84 tasks. &mdash; <a href="https://arxiv.org/html/2602.12670v1" target="_blank">arxiv.org/html/2602.12670v1</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11: Context 2/3 — agents.md -->
+    <div class="slide" data-slide="11">
+      <div class="context-journey">
+        <div class="badge mb-1">Best Practice #1</div>
+        <h2 style="margin-bottom: 0.5rem;">Context</h2>
+
+        <div class="context-progress-bar">
+          <div class="context-step-wrapper">
+            <div class="context-dot done">&#10003;</div>
+            <div class="context-step-label">skill.md</div>
+          </div>
+          <div class="context-line done"></div>
+          <div class="context-step-wrapper">
+            <div class="context-dot active">2</div>
+            <div class="context-step-label">agents.md</div>
+          </div>
+          <div class="context-line"></div>
+          <div class="context-step-wrapper">
+            <div class="context-dot">3</div>
+            <div class="context-step-label">Prompting</div>
+          </div>
+        </div>
+
+        <div class="context-card-main">
+          <h3>agents.md</h3>
+          <p style="font-size: 1rem; line-height: 1.5; margin-bottom: 1rem;">Developer-provided files only marginally improve performance (<strong>+4% on average</strong>), while LLM-generated context files have a small <strong>negative effect</strong> (&minus;3%). Context files <strong>increase costs by over 20%</strong>.</p>
+          <div class="center">
+            <img src="images/pdf_page11_img0.png" alt="Figure 1. Impact of context files on agent performance" style="max-height: 50vh; max-width: 95%; border-radius: 0.75rem; box-shadow: 0 4px 16px oklch(0 0 0 / 0.1);" />
+          </div>
+          <p class="small-text mt-1 center" style="font-style: italic; color: oklch(0.45 0.02 280);">These observations are robust across different LLMs and prompts. &mdash; <a href="https://arxiv.org/html/2602.11988v1" target="_blank">arxiv.org/html/2602.11988v1</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12: Context 3/3 — Prompting -->
+    <div class="slide" data-slide="12">
+      <div class="context-journey">
+        <div class="badge mb-1">Best Practice #1</div>
+        <h2 style="margin-bottom: 0.5rem;">Context</h2>
+
+        <div class="context-progress-bar">
+          <div class="context-step-wrapper">
+            <div class="context-dot done">&#10003;</div>
+            <div class="context-step-label">skill.md</div>
+          </div>
+          <div class="context-line done"></div>
+          <div class="context-step-wrapper">
+            <div class="context-dot done">&#10003;</div>
+            <div class="context-step-label">agents.md</div>
+          </div>
+          <div class="context-line done"></div>
+          <div class="context-step-wrapper">
+            <div class="context-dot active">3</div>
+            <div class="context-step-label">Prompting</div>
+          </div>
+        </div>
+
+        <div class="context-card-main">
+          <h3>Prompting: Explicit is better than implicit</h3>
+          <div class="glass" style="padding: 2rem; margin-top: 1rem;">
+            <ul>
+              <li>Reference specific files to show example code</li>
+              <li>Describe the expected output format</li>
+              <li>Break complex tasks into smaller, focused prompts</li>
+              <li>Include constraints and edge cases up front</li>
+            </ul>
+          </div>
+          <p class="small-text mt-2 center" style="line-height: 1.6;">The more precise your prompt, the better the agent's first attempt &mdash; saving iteration cycles.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 13: Verification -->
+    <div class="slide" data-slide="13">
+      <div class="badge mb-1">Best Practice #2</div>
+      <h2>Verification</h2>
+      <div class="three-col mt-2">
+        <div class="card">
+          <div class="verif-icon verif-icon-test">
+            <svg viewBox="0 0 36 36" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4v10l-6 8a3 3 0 002.5 4.5h15a3 3 0 002.5-4.5l-6-8V4"/>
+              <line x1="12" y1="4" x2="24" y2="4"/>
+              <circle cx="16" cy="24" r="1.5" fill="var(--primary)" stroke="none"/>
+              <circle cx="21" cy="21" r="1" fill="var(--primary)" stroke="none"/>
+            </svg>
+          </div>
+          <h3>Unit Tests</h3>
+          <p class="small-text">Validate individual functions and modules produced by the agent.</p>
+        </div>
+        <div class="card">
+          <div class="verif-icon verif-icon-trace">
+            <svg viewBox="0 0 36 36" fill="none" stroke="oklch(0.65 0.14 70)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="4 28 10 18 16 22 22 10 28 14 32 6"/>
+              <circle cx="10" cy="18" r="2" fill="oklch(0.78 0.14 70 / 0.3)"/>
+              <circle cx="22" cy="10" r="2" fill="oklch(0.78 0.14 70 / 0.3)"/>
+              <line x1="4" y1="32" x2="32" y2="32" stroke="oklch(0.65 0.14 70 / 0.4)"/>
+            </svg>
+          </div>
+          <h3>Traces</h3>
+          <p class="small-text">Inspect agent reasoning and tool calls to understand its decisions.</p>
+        </div>
+        <div class="card">
+          <div class="verif-icon verif-icon-func">
+            <svg viewBox="0 0 36 36" fill="none" stroke="var(--secondary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="6" width="28" height="20" rx="2"/>
+              <line x1="4" y1="12" x2="32" y2="12"/>
+              <circle cx="8" cy="9" r="1" fill="oklch(0.65 0.18 25)"/>
+              <circle cx="12" cy="9" r="1" fill="oklch(0.75 0.15 85)"/>
+              <circle cx="16" cy="9" r="1" fill="oklch(0.60 0.18 145)"/>
+              <polyline points="13 20 16 23 23 16" stroke="oklch(0.55 0.18 150)" stroke-width="2.5"/>
+            </svg>
+          </div>
+          <h3>Functionality Tests</h3>
+          <p class="small-text">End-to-end checks that the feature works as intended.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 14: Verification — Playwright functionality test -->
+    <div class="slide" data-slide="14">
+      <div class="badge mb-1">Best Practice #2</div>
+      <h2>Functionality Testing with Playwright</h2>
+      <div class="card center" style="width: 100%; max-width: 850px; padding: 2rem;">
+        <p style="font-size: 1.15rem; margin-bottom: 1.5rem;">Playwright screenshots automatically attached to PRs provide visual proof that features work correctly.</p>
+        <img src="images/playwright-screen.png" alt="Playwright functionality test screenshot" style="max-height: 55vh; max-width: 100%; border-radius: 0.75rem; box-shadow: 0 4px 16px oklch(0 0 0 / 0.1);" />
+      </div>
+    </div>
+
+    <!-- SLIDE 15: Version Control -->
+    <div class="slide" data-slide="15">
+      <div class="badge mb-1">Best Practice #3</div>
+      <h2>Version Control</h2>
+      <div class="card" style="width: 100%; max-width: 700px;">
+        <ul>
+          <li><strong>Commit often</strong> &mdash; create checkpoints as the agent works</li>
+          <li><strong>Maintain documentation</strong> &mdash; keep READMEs and docs in sync</li>
+          <li><strong>Think twice before sending a PR</strong> &mdash; review agent-generated code carefully</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- SLIDE 16: Demo -->
+    <div class="slide slide-section" data-slide="16">
+      <div class="badge mb-1">Live Demo</div>
+      <h2>Using GitHub Copilot<br/>in PyCharm &amp; the Terminal</h2>
+      <div class="sparkle mt-1">&#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022;</div>
+      <p class="mt-2"><a href="https://aka.ms/pytv26" style="font-size: 1.3rem;">aka.ms/pytv26</a></p>
+    </div>
+
+    <!-- SLIDE 17: Thank You / Summary -->
+    <div class="slide slide-title" data-slide="17">
+      <div class="center">
+        <h1>Thank You!</h1>
+        <div class="card" style="max-width: 650px; width: 100%; padding: 2rem 2.5rem; text-align: left;">
+          <h3 style="margin-bottom: 1rem; text-align: center; color: var(--primary);">What We Covered</h3>
+          <ul>
+            <li><strong>What is Agentic Coding</strong> &mdash; AI agents, the agentic loop, coding agent anatomy</li>
+            <li><strong>Context</strong> &mdash; skill.md, agents.md, and effective prompting</li>
+            <li><strong>Verification</strong> &mdash; unit tests, traces, and functionality tests</li>
+            <li><strong>Version Control</strong> &mdash; commit often, maintain docs, review PRs carefully</li>
+          </ul>
+        </div>
+        <p class="mt-2"><a href="https://aka.ms/pytv26" style="font-size: 1.4rem; font-weight: 600;">aka.ms/pytv26</a></p>
+        <div class="social-links mt-1">
+          <a href="https://twitter.com/marlene_zw" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            marlene_zw
+          </a>
+          <a href="https://bsky.app/profile/marlene.bsky.social" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+            marlene.bsky.social
+          </a>
+          <a href="https://www.linkedin.com/in/marlenemhangami/" target="_blank">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </a>
+        </div>
+        <div class="sparkle mt-2">&#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022; &middot; &#10022;</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress" id="progress"></div>
+
+  <!-- Slide number -->
+  <div class="slide-num" id="slideNum">1 / 17</div>
+
+  <!-- Speaker link -->
+  <div class="speaker-badge"><a href="https://aka.ms/pytv26">aka.ms/pytv26</a></div>
+
+  <!-- Key hint -->
+  <div class="keys-hint" id="keysHint">&larr; &rarr; or click to navigate</div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const progress = document.getElementById('progress');
+    const slideNum = document.getElementById('slideNum');
+    const keysHint = document.getElementById('keysHint');
+    let current = 0;
+    const total = slides.length;
+
+    const progSlides = {};
+    slides.forEach((s, i) => {
+      if (s.dataset.progressive === 'true') {
+        const layers = s.querySelectorAll('.prog-layer');
+        progSlides[i] = { layers, revealed: 0, total: layers.length };
+      }
+    });
+
+    function updateProgressive(idx) {
+      const ps = progSlides[idx];
+      if (!ps) return;
+      for (let i = 0; i < ps.total; i++) {
+        ps.layers[i].classList.toggle('visible', i < ps.revealed);
+      }
+      const hint = slides[idx].querySelector('#progHint');
+      if (hint) {
+        hint.style.opacity = ps.revealed >= ps.total ? '0' : '0.5';
+      }
+    }
+
+    function go(index) {
+      if (index < 0 || index >= total) return;
+      slides[current].classList.remove('active');
+      current = index;
+      slides[current].classList.add('active');
+      progress.style.width = ((current + 1) / total * 100) + '%';
+      slideNum.textContent = (current + 1) + ' / ' + total;
+      if (current > 0) keysHint.style.opacity = '0';
+    }
+
+    function next() {
+      const ps = progSlides[current];
+      if (ps && ps.revealed < ps.total) {
+        ps.revealed++;
+        updateProgressive(current);
+        return;
+      }
+      go(current + 1);
+    }
+
+    function prev() {
+      const ps = progSlides[current];
+      if (ps && ps.revealed > 0) {
+        ps.revealed--;
+        updateProgressive(current);
+        return;
+      }
+      go(current - 1);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+      if (e.key === 'Home') go(0);
+      if (e.key === 'End') go(total - 1);
+    });
+
+    document.addEventListener('click', (e) => {
+      if (e.clientX > window.innerWidth / 2) next();
+      else prev();
+    });
+
+    go(0);
+  </script>
+</body>
+</html>
