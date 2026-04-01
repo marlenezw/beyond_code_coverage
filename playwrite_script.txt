@@ -1,0 +1,62 @@
+What is Playwright and How to use it
+
+For the rest of this talk I’ll focus on how we can use PlayWright for functionality testing
+‘PlayWright’
+What is PlayWright?
+Open Source Testing Library
+Automates end-to-end testing 
+Simulates user interactions 
+Web browser based only 
+What does running a test with Playwright look like? 
+Example code 
+Ways to give your agent the ability to use Playwright today:
+PlayWright Browser Automation MCP server 
+PlayWright Agents 
+
+Playwright MCP server 
+Natural Language to Test generation 
+Browser automation 
+Screenshot testing 
+Manual test fixing required
+
+
+PlayWright Agents:
+Three Specialized Agents 
+Planner (creates test, plans) 
+Understands your app structure 
+Uses seed files and utilities 
+Respects existing code patterns 
+Foundation for good tests
+Generator (writes tests based on plans) 
+One test per file (recommended)
+Verifies elements before writing 
+Uses test logs to prevent hallucination
+Runs multiple times for accuracy 
+Healer (fixes broken tests) 
+Runs tests in debug mode
+Read console errors 
+Checks API responses 
+Adds ‘FIXME’ for app bugs
+
+Getting Started:
+‘Npx playwright init-agents –loop=vscode’
+This command will autogenerate:
+Agents folder
+VS Code MCP configuration
+Seed spec file 
+
+(in vs code) What gets installed? 
+
+Test MCP Server
+Agents dedicated testing MCP server 
+Different from browser automation MCP 
+Special tools for testing:
+Debug mode
+Log verification 
+Test-specific operations
+
+Best Practices:
+Use headless mode for multitasking 
+Enable Auto Approve for efficiency 
+Commit before healing
+Generate tests section by section 
